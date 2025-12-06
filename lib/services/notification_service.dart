@@ -16,7 +16,12 @@ class NotificationService {
   /// Initialise le service de notifications
   /// Doit être appelé au démarrage de l'app
   Future<void> initialize() async {
-    if (_isInitialized) return;
+    if (_isInitialized) {
+      print('⚠️ NotificationService déjà initialisé');
+      return;
+    }
+
+    print('🔧 Initialisation du NotificationService...');
 
     // Configuration Android
     const AndroidInitializationSettings androidSettings =
@@ -37,12 +42,82 @@ class NotificationService {
     );
 
     // Initialiser le plugin
-    await _notificationsPlugin.initialize(
+    final result = await _notificationsPlugin.initialize(
       settings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
+    print('📱 Plugin initialisé: $result');
+
+    // Créer les canaux de notification Android
+    await _createNotificationChannels();
+
     _isInitialized = true;
+    print('✅ NotificationService initialisé avec succès');
+  }
+
+  /// Crée les canaux de notification pour Android
+  Future<void> _createNotificationChannels() async {
+    print('📢 Création des canaux de notification Android...');
+
+    const AndroidNotificationChannel testChannel = AndroidNotificationChannel(
+      'test_channel',
+      'Notifications de test',
+      description: 'Canal pour les notifications de test',
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    const AndroidNotificationChannel gpsChannel = AndroidNotificationChannel(
+      'gps_channel',
+      'Notifications GPS',
+      description: 'Notifications liées à la géolocalisation',
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    const AndroidNotificationChannel calendarChannel = AndroidNotificationChannel(
+      'calendar_channel',
+      'Notifications Calendrier',
+      description: 'Notifications pour les événements du calendrier',
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    const AndroidNotificationChannel scheduledChannel = AndroidNotificationChannel(
+      'scheduled_channel',
+      'Notifications planifiées',
+      description: 'Notifications planifiées dans le futur',
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    // Créer les canaux sur Android
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(testChannel);
+
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(gpsChannel);
+
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(calendarChannel);
+
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(scheduledChannel);
+
+    print('✅ Canaux de notification créés');
   }
 
   /// Callback quand l'utilisateur tape sur une notification
@@ -77,9 +152,14 @@ class NotificationService {
 
   /// Envoie une notification simple de test
   Future<void> showTestNotification() async {
+    print('🔔 showTestNotification() appelée');
+
     if (!_isInitialized) {
+      print('⚠️ Service non initialisé, initialisation en cours...');
       await initialize();
     }
+
+    print('📤 Envoi de la notification de test...');
 
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
@@ -89,6 +169,8 @@ class NotificationService {
       importance: Importance.high,
       priority: Priority.high,
       showWhen: true,
+      playSound: true,
+      enableVibration: true,
     );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
@@ -102,13 +184,18 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    await _notificationsPlugin.show(
-      0,
-      'Test de notification',
-      'Ceci est une notification de test du POC Flutter !',
-      details,
-      payload: 'test_notification',
-    );
+    try {
+      await _notificationsPlugin.show(
+        0,
+        'Test de notification',
+        'Ceci est une notification de test du POC Flutter !',
+        details,
+        payload: 'test_notification',
+      );
+      print('✅ Notification envoyée avec succès !');
+    } catch (e) {
+      print('❌ Erreur lors de l\'envoi de la notification: $e');
+    }
   }
 
   /// Envoie une notification avec position GPS
