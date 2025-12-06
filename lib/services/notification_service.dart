@@ -161,16 +161,24 @@ class NotificationService {
 
     print('📤 Envoi de la notification de test...');
 
+    // Utiliser un ID unique basé sur le timestamp pour éviter le remplacement
+    final int notificationId = DateTime.now().millisecondsSinceEpoch.remainder(100000);
+    print('🆔 ID de notification: $notificationId');
+
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
       'test_channel',
       'Notifications de test',
       channelDescription: 'Canal pour les notifications de test',
-      importance: Importance.high,
+      importance: Importance.max,
       priority: Priority.high,
       showWhen: true,
       playSound: true,
       enableVibration: true,
+      enableLights: true,
+      autoCancel: true,
+      ongoing: false,
+      ticker: 'Test de notification',
     );
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
@@ -186,13 +194,14 @@ class NotificationService {
 
     try {
       await _notificationsPlugin.show(
-        0,
-        'Test de notification',
-        'Ceci est une notification de test du POC Flutter !',
+        notificationId,
+        '🔔 Test de notification',
+        'Ceci est une notification de test du POC Flutter ! 🎉',
         details,
-        payload: 'test_notification',
+        payload: 'test_notification_$notificationId',
       );
-      print('✅ Notification envoyée avec succès !');
+      print('✅ Notification #$notificationId envoyée avec succès !');
+      print('📱 Tirez la barre de notification vers le bas pour la voir');
     } catch (e) {
       print('❌ Erreur lors de l\'envoi de la notification: $e');
     }
