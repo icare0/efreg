@@ -501,6 +501,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () async {
+                await _notificationService.openNotificationSettings();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Vérifiez que les notifications sont activées dans les paramètres'),
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.settings),
+              label: const Text('Ouvrir les paramètres de notification'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.grey[700],
+              ),
+            ),
             const SizedBox(height: 12),
             const Divider(),
             const SizedBox(height: 8),

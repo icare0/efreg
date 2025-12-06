@@ -295,6 +295,12 @@ class NotificationService {
     );
   }
 
+  /// Ouvre les paramètres de notification de l'application
+  Future<void> openNotificationSettings() async {
+    print('🔧 Ouverture des paramètres de notification...');
+    await openAppSettings();
+  }
+
   /// Annule toutes les notifications
   Future<void> cancelAllNotifications() async {
     await _notificationsPlugin.cancelAll();
