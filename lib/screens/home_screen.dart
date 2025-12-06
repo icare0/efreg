@@ -5,6 +5,7 @@ import 'package:googleapis/calendar/v3.dart' as google_calendar;
 import '../services/location_service.dart';
 import '../services/google_calendar_service.dart';
 import '../services/microsoft_calendar_service.dart';
+import '../services/notification_service.dart';
 
 /// Écran principal du POC
 /// Regroupe : login Google/Microsoft, position GPS en temps réel, événements du jour
@@ -20,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final LocationService _locationService = LocationService();
   final GoogleCalendarService _googleCalendarService = GoogleCalendarService();
   final MicrosoftCalendarService _microsoftCalendarService = MicrosoftCalendarService();
+  final NotificationService _notificationService = NotificationService();
 
   // État GPS
   Position? _currentPosition;
@@ -40,6 +42,13 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _startLocationTracking();
+    _initializeNotifications();
+  }
+
+  /// Initialise le service de notifications
+  Future<void> _initializeNotifications() async {
+    await _notificationService.initialize();
+    await _notificationService.requestPermissions();
   }
 
   @override
@@ -167,6 +176,12 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             // Section GPS
             _buildGpsSection(),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 24),
+
+            // Section Notifications
+            _buildNotificationsSection(),
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 24),
@@ -370,6 +385,132 @@ class _HomeScreenState extends State<HomeScreen> {
               else
                 _buildMicrosoftEventsList(),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Widget pour la section Notifications
+  Widget _buildNotificationsSection() {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.notifications_active, color: Colors.orange, size: 28),
+                const SizedBox(width: 8),
+                Text(
+                  'Notifications de test',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Testez les notifications locales :',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    await _notificationService.showTestNotification();
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Notification de test envoyée !')),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.notification_add),
+                  label: const Text('Notif simple'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    if (_currentPosition != null) {
+                      await _notificationService.showGPSNotification(
+                        _currentPosition!.latitude,
+                        _currentPosition!.longitude,
+                      );
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Notification GPS envoyée !')),
+                        );
+                      }
+                    } else {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Position GPS non disponible')),
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.gps_fixed),
+                  label: const Text('Notif GPS'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    await _notificationService.showCalendarNotification(
+                      'Réunion importante dans 15 minutes',
+                      'Google',
+                    );
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Notification calendrier envoyée !')),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.calendar_today),
+                  label: const Text('Notif Calendrier'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Notification dans 5 secondes...')),
+                      );
+                    }
+                    // Lance en arrière-plan
+                    _notificationService.showScheduledNotification(5);
+                  },
+                  icon: const Icon(Icons.schedule),
+                  label: const Text('Notif dans 5s'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Divider(),
+            const SizedBox(height: 8),
+            Text(
+              '💡 Astuce : Les notifications apparaissent dans la barre de notifications de votre appareil.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: Colors.grey[600],
+                  ),
+            ),
           ],
         ),
       ),
