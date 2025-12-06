@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 /// Service de notifications locales
 /// Gère l'envoi de notifications push locales sur l'appareil
@@ -49,23 +50,29 @@ class NotificationService {
     print('Notification tappée : ${response.payload}');
   }
 
-  /// Demande les permissions de notifications (iOS principalement)
+  /// Demande les permissions de notifications (Android 13+ et iOS)
   Future<bool> requestPermissions() async {
     if (!_isInitialized) {
       await initialize();
     }
 
-    // Demander les permissions sur iOS
-    final bool? result = await _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
+    // Demander la permission de notification (Android 13+ et iOS)
+    final status = await Permission.notification.request();
 
-    return result ?? true;
+    if (status.isGranted) {
+      print('✅ Permission de notification accordée');
+      return true;
+    } else if (status.isDenied) {
+      print('❌ Permission de notification refusée');
+      return false;
+    } else if (status.isPermanentlyDenied) {
+      print('❌ Permission de notification refusée définitivement');
+      // Ouvrir les paramètres de l'app
+      await openAppSettings();
+      return false;
+    }
+
+    return false;
   }
 
   /// Envoie une notification simple de test
