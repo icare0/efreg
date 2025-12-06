@@ -64,60 +64,56 @@ class NotificationService {
       'test_channel',
       'Notifications de test',
       description: 'Canal pour les notifications de test',
-      importance: Importance.high,
+      importance: Importance.max,
       playSound: true,
       enableVibration: true,
+      showBadge: true,
     );
 
     const AndroidNotificationChannel gpsChannel = AndroidNotificationChannel(
       'gps_channel',
       'Notifications GPS',
       description: 'Notifications liées à la géolocalisation',
-      importance: Importance.high,
+      importance: Importance.max,
       playSound: true,
       enableVibration: true,
+      showBadge: true,
     );
 
     const AndroidNotificationChannel calendarChannel = AndroidNotificationChannel(
       'calendar_channel',
       'Notifications Calendrier',
       description: 'Notifications pour les événements du calendrier',
-      importance: Importance.high,
+      importance: Importance.max,
       playSound: true,
       enableVibration: true,
+      showBadge: true,
     );
 
     const AndroidNotificationChannel scheduledChannel = AndroidNotificationChannel(
       'scheduled_channel',
       'Notifications planifiées',
       description: 'Notifications planifiées dans le futur',
-      importance: Importance.high,
+      importance: Importance.max,
       playSound: true,
       enableVibration: true,
+      showBadge: true,
     );
 
     // Créer les canaux sur Android
-    await _notificationsPlugin
+    final androidImplementation = _notificationsPlugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(testChannel);
+            AndroidFlutterLocalNotificationsPlugin>();
 
-    await _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(gpsChannel);
-
-    await _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(calendarChannel);
-
-    await _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(scheduledChannel);
-
-    print('✅ Canaux de notification créés');
+    if (androidImplementation != null) {
+      await androidImplementation.createNotificationChannel(testChannel);
+      await androidImplementation.createNotificationChannel(gpsChannel);
+      await androidImplementation.createNotificationChannel(calendarChannel);
+      await androidImplementation.createNotificationChannel(scheduledChannel);
+      print('✅ Canaux de notification créés avec Importance.max');
+    } else {
+      print('⚠️ AndroidFlutterLocalNotificationsPlugin non disponible');
+    }
   }
 
   /// Callback quand l'utilisateur tape sur une notification
