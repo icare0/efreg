@@ -11,7 +11,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.example.flutter_gps_calendar_poc.MainActivity
-import com.example.flutter_gps_calendar_poc.R
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -123,7 +122,7 @@ class NotificationService @Inject constructor(
         )
 
         val notificationBuilder = NotificationCompat.Builder(context, GEOFENCE_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("📍 You're near: $taskTitle")
             .setContentText("Location: $locationName")
             .setStyle(
@@ -164,12 +163,12 @@ class NotificationService @Inject constructor(
 
             notificationBuilder
                 .addAction(
-                    R.drawable.ic_launcher_foreground,
+                    android.R.drawable.ic_dialog_info,
                     "✅ Complete",
                     completePendingIntent
                 )
                 .addAction(
-                    R.drawable.ic_launcher_foreground,
+                    android.R.drawable.ic_dialog_info,
                     "❌ Dismiss",
                     dismissPendingIntent
                 )
@@ -210,7 +209,7 @@ class NotificationService @Inject constructor(
         }
 
         val notification = NotificationCompat.Builder(context, CALENDAR_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("📅 $eventTitle")
             .setContentText(contentText)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -254,7 +253,7 @@ class NotificationService @Inject constructor(
         )
 
         val notificationBuilder = NotificationCompat.Builder(context, GEOFENCE_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("✨ Perfect timing! You're free now")
             .setContentText("📍 $taskTitle at $locationName")
             .setStyle(
@@ -300,12 +299,12 @@ class NotificationService @Inject constructor(
 
             notificationBuilder
                 .addAction(
-                    R.drawable.ic_launcher_foreground,
+                    android.R.drawable.ic_dialog_info,
                     "✅ Complete",
                     completePendingIntent
                 )
                 .addAction(
-                    R.drawable.ic_launcher_foreground,
+                    android.R.drawable.ic_dialog_info,
                     "❌ Dismiss",
                     dismissPendingIntent
                 )
@@ -324,7 +323,7 @@ class NotificationService @Inject constructor(
         }
 
         val notification = NotificationCompat.Builder(context, GENERAL_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_LOW)

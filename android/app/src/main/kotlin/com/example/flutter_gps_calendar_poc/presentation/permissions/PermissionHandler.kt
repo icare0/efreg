@@ -44,14 +44,31 @@ fun PermissionHandler(
         )
     }
 
+    // Helper function to move to next permission step
+    val checkNextPermission: () -> Unit = {
+        if (!permissionsChecked) {
+            if (!showCalendarRationale) {
+                // Move to calendar permission
+                showCalendarRationale = true
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !showNotificationRationale) {
+                // Move to notification permission (Android 13+)
+                showNotificationRationale = true
+            } else {
+                // All done
+                onPermissionsGranted()
+                permissionsChecked = true
+            }
+        }
+    }
+
     val locationLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val allGranted = permissions.values.all { it }
         if (allGranted) {
             showLocationRationale = false
-            checkNextPermission()
         }
+        checkNextPermission()
     }
 
     // Calendar permissions
@@ -66,8 +83,8 @@ fun PermissionHandler(
         val allGranted = permissions.values.all { it }
         if (allGranted) {
             showCalendarRationale = false
-            checkNextPermission()
         }
+        checkNextPermission()
     }
 
     // Notification permission (Android 13+)
@@ -79,18 +96,6 @@ fun PermissionHandler(
         }
         onPermissionsGranted()
         permissionsChecked = true
-    }
-
-    fun checkNextPermission() {
-        if (!permissionsChecked) {
-            // First check notification permission (if needed)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                showNotificationRationale = true
-            } else {
-                onPermissionsGranted()
-                permissionsChecked = true
-            }
-        }
     }
 
     LaunchedEffect(Unit) {
