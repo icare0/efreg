@@ -2,6 +2,7 @@ package com.example.flutter_gps_calendar_poc.di
 
 import android.content.Context
 import androidx.room.Room
+import com.example.flutter_gps_calendar_poc.data.gamification.GamificationManager
 import com.example.flutter_gps_calendar_poc.data.local.dao.TaskDao
 import com.example.flutter_gps_calendar_poc.data.local.dao.UserPreferenceDao
 import com.example.flutter_gps_calendar_poc.data.local.dao.UserStatsDao
@@ -87,6 +88,20 @@ object DatabaseModule {
     @Singleton
     fun provideUserStatsDao(database: AppDatabase): UserStatsDao {
         return database.userStatsDao()
+    }
+
+    /**
+     * Provides the GamificationManager instance.
+     *
+     * Manages gamification features: points, badges, streaks, levels.
+     *
+     * @param userStatsDao The UserStatsDao instance.
+     * @return GamificationManager for gamification operations.
+     */
+    @Provides
+    @Singleton
+    fun provideGamificationManager(userStatsDao: UserStatsDao): GamificationManager {
+        return GamificationManager(userStatsDao)
     }
 
     /**
