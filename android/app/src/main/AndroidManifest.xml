@@ -38,5 +38,16 @@
             android:name=".data.location.GeofenceBroadcastReceiver"
             android:enabled="true"
             android:exported="false" />
+
+        <!-- Notification Action Receiver for AI Feedback -->
+        <receiver
+            android:name=".data.notification.NotificationActionReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.flutter_gps_calendar_poc.ACTION_COMPLETE" />
+                <action android:name="com.example.flutter_gps_calendar_poc.ACTION_DISMISS" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

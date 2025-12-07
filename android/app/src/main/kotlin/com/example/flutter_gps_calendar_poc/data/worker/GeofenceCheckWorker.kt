@@ -117,7 +117,8 @@ class GeofenceCheckWorker @AssistedInject constructor(
                         taskTitle = task.title,
                         taskDescription = task.description,
                         locationName = task.locationName,
-                        freeSlotDuration = freeSlotDuration
+                        freeSlotDuration = freeSlotDuration,
+                        taskId = task.id  // Pass taskId for feedback actions
                     )
                 } else {
                     Log.d(TAG, "✅ NOTIFY: User is BUSY but score is high, sending simple reminder")
@@ -125,7 +126,8 @@ class GeofenceCheckWorker @AssistedInject constructor(
                     notificationService.showGeofenceNotification(
                         taskTitle = task.title,
                         taskDescription = task.description,
-                        locationName = task.locationName
+                        locationName = task.locationName,
+                        taskId = task.id  // Pass taskId for feedback actions
                     )
                 }
             } else {

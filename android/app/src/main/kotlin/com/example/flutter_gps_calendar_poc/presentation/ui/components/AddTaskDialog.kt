@@ -1,5 +1,6 @@
 package com.example.flutter_gps_calendar_poc.presentation.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -9,13 +10,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.flutter_gps_calendar_poc.domain.model.Task
 import com.example.flutter_gps_calendar_poc.domain.model.TaskType
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Dialog for adding a new task.
  *
+ * Enhanced with:
+ * - DatePicker for due date selection
+ * - Location input with coordinates support
+ * - Task type selection with icons
+ *
  * @param onDismiss Callback when the dialog is dismissed.
  * @param onConfirm Callback when the task is confirmed (receives the new task).
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskDialog(
     onDismiss: () -> Unit,
@@ -24,8 +33,14 @@ fun AddTaskDialog(
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var locationName by remember { mutableStateOf("") }
+    var latitude by remember { mutableStateOf("") }
+    var longitude by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(TaskType.TASK) }
     var expanded by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var selectedDate by remember { mutableStateOf<Long?>(null) }
+
+    val dateFormatter = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -45,7 +60,10 @@ fun AddTaskDialog(
                     onValueChange = { title = it },
                     label = { Text("Title") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    leadingIcon = {
+                        Icon(Icons.Default.Edit, contentDescription = "Title")
+                    }
                 )
 
                 // Description field
@@ -55,18 +73,30 @@ fun AddTaskDialog(
                     label = { Text("Description (optional)") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
-                    maxLines = 3
+                    maxLines = 3,
+                    leadingIcon = {
+                        Icon(Icons.Default.Description, contentDescription = "Description")
+                    }
                 )
 
-                // Location field
+                // Due date picker
                 OutlinedTextField(
-                    value = locationName,
-                    onValueChange = { locationName = it },
-                    label = { Text("Location (optional)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
+                    value = selectedDate?.let { dateFormatter.format(Date(it)) } ?: "",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Due Date (optional)") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showDatePicker = true },
                     leadingIcon = {
-                        Icon(Icons.Default.LocationOn, contentDescription = "Location")
+                        Icon(Icons.Default.CalendarMonth, contentDescription = "Due Date")
+                    },
+                    trailingIcon = {
+                        if (selectedDate != null) {
+                            IconButton(onClick = { selectedDate = null }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Clear date")
+                            }
+                        }
                     }
                 )
 
@@ -82,6 +112,12 @@ fun AddTaskDialog(
                         label = { Text("Type") },
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = getTaskTypeIcon(selectedType),
+                                contentDescription = "Type"
+                            )
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -110,16 +146,74 @@ fun AddTaskDialog(
                         }
                     }
                 }
+
+                // Location section
+                Text(
+                    text = "Location (optional)",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                OutlinedTextField(
+                    value = locationName,
+                    onValueChange = { locationName = it },
+                    label = { Text("Place name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    leadingIcon = {
+                        Icon(Icons.Default.LocationOn, contentDescription = "Location")
+                    },
+                    placeholder = { Text("e.g., Supermarket, Gym") }
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = latitude,
+                        onValueChange = {
+                            // Only allow numbers and decimal point
+                            if (it.isEmpty() || it.matches(Regex("^-?\\d*\\.?\\d*$"))) {
+                                latitude = it
+                            }
+                        },
+                        label = { Text("Latitude") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        placeholder = { Text("48.8566") }
+                    )
+
+                    OutlinedTextField(
+                        value = longitude,
+                        onValueChange = {
+                            // Only allow numbers and decimal point
+                            if (it.isEmpty() || it.matches(Regex("^-?\\d*\\.?\\d*$"))) {
+                                longitude = it
+                            }
+                        },
+                        label = { Text("Longitude") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        placeholder = { Text("2.3522") }
+                    )
+                }
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
                     if (title.isNotBlank()) {
+                        val lat = latitude.toDoubleOrNull()
+                        val lng = longitude.toDoubleOrNull()
+
                         val task = Task(
                             title = title,
                             description = description,
                             locationName = locationName,
+                            latitude = lat,
+                            longitude = lng,
+                            dueDate = selectedDate,
                             type = selectedType
                         )
                         onConfirm(task)
@@ -136,6 +230,34 @@ fun AddTaskDialog(
             }
         }
     )
+
+    // Date picker dialog
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate ?: System.currentTimeMillis()
+        )
+
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        selectedDate = datePickerState.selectedDateMillis
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 }
 
 /**

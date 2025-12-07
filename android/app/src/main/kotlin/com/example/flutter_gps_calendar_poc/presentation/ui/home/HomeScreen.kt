@@ -24,6 +24,8 @@ import com.example.flutter_gps_calendar_poc.presentation.ui.components.TaskItemC
  * - Native Material 3 design
  * - Cleaner architecture (MVVM)
  * - Better performance (Jetpack Compose)
+ * - Full geofencing and location integration
+ * - Runtime permission handling
  *
  * Layout structure:
  * 1. Location indicator (GPS coordinates)
@@ -39,6 +41,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val currentLocation by viewModel.currentLocation.collectAsState()
     var showAddTaskDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -106,6 +109,7 @@ fun HomeScreen(
             is HomeUIState.Success -> {
                 HomeContent(
                     state = state,
+                    currentLocation = currentLocation,
                     onToggleTask = { viewModel.toggleTaskCompletion(it) },
                     onDeleteTask = { viewModel.deleteTask(it) },
                     modifier = Modifier.padding(paddingValues)
@@ -132,6 +136,7 @@ fun HomeScreen(
 @Composable
 private fun HomeContent(
     state: HomeUIState.Success,
+    currentLocation: android.location.Location?,
     onToggleTask: (com.example.flutter_gps_calendar_poc.domain.model.Task) -> Unit,
     onDeleteTask: (com.example.flutter_gps_calendar_poc.domain.model.Task) -> Unit,
     modifier: Modifier = Modifier
@@ -142,11 +147,11 @@ private fun HomeContent(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 80.dp) // Space for FAB
     ) {
-        // GPS Location indicator
+        // GPS Location indicator (connected to real location!)
         item {
             LocationCard(
-                latitude = null, // TODO: Connect to location service
-                longitude = null
+                latitude = currentLocation?.latitude,
+                longitude = currentLocation?.longitude
             )
         }
 

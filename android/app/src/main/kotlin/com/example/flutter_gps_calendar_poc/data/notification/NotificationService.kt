@@ -95,14 +95,18 @@ class NotificationService @Inject constructor(
      * Shows a geofence notification when user enters a task location.
      * This replaces ShowGPSNotification from the Flutter POC.
      *
+     * Enhanced with action buttons for AI feedback learning.
+     *
      * @param taskTitle Title of the task at this location.
      * @param taskDescription Description of the task.
      * @param locationName Name of the location.
+     * @param taskId Task ID for feedback tracking.
      */
     fun showGeofenceNotification(
         taskTitle: String,
         taskDescription: String,
-        locationName: String
+        locationName: String,
+        taskId: Long = -1L
     ) {
         if (!hasNotificationPermission()) {
             return
@@ -118,7 +122,7 @@ class NotificationService @Inject constructor(
             PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notification = NotificationCompat.Builder(context, GEOFENCE_CHANNEL_ID)
+        val notificationBuilder = NotificationCompat.Builder(context, GEOFENCE_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle("📍 You're near: $taskTitle")
             .setContentText("Location: $locationName")
@@ -131,9 +135,47 @@ class NotificationService @Inject constructor(
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setVibrate(longArrayOf(0, 250, 250, 250))
-            .build()
 
-        notificationManager.notify(GEOFENCE_NOTIFICATION_ID, notification)
+        // Add action buttons for AI feedback if taskId is valid
+        if (taskId != -1L) {
+            val completeIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+                action = NotificationActionReceiver.ACTION_COMPLETE
+                putExtra(NotificationActionReceiver.EXTRA_TASK_ID, taskId)
+                putExtra(NotificationActionReceiver.EXTRA_NOTIFICATION_ID, GEOFENCE_NOTIFICATION_ID)
+            }
+            val completePendingIntent = PendingIntent.getBroadcast(
+                context,
+                taskId.toInt(),
+                completeIntent,
+                PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val dismissIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+                action = NotificationActionReceiver.ACTION_DISMISS
+                putExtra(NotificationActionReceiver.EXTRA_TASK_ID, taskId)
+                putExtra(NotificationActionReceiver.EXTRA_NOTIFICATION_ID, GEOFENCE_NOTIFICATION_ID)
+            }
+            val dismissPendingIntent = PendingIntent.getBroadcast(
+                context,
+                taskId.toInt() + 10000,
+                dismissIntent,
+                PendingIntent.FLAG_IMMUTABLE
+            )
+
+            notificationBuilder
+                .addAction(
+                    R.drawable.ic_launcher_foreground,
+                    "✅ Complete",
+                    completePendingIntent
+                )
+                .addAction(
+                    R.drawable.ic_launcher_foreground,
+                    "❌ Dismiss",
+                    dismissPendingIntent
+                )
+        }
+
+        notificationManager.notify(GEOFENCE_NOTIFICATION_ID, notificationBuilder.build())
     }
 
     /**
@@ -184,16 +226,20 @@ class NotificationService @Inject constructor(
      * Shows a contextual notification when user is free and near a task location.
      * This is the smart notification that checks calendar availability.
      *
+     * Enhanced with action buttons for AI feedback learning.
+     *
      * @param taskTitle Title of the task.
      * @param taskDescription Description of the task.
      * @param locationName Name of the location.
      * @param freeSlotDuration Duration of the current free slot in minutes.
+     * @param taskId Task ID for feedback tracking.
      */
     fun showContextualTaskNotification(
         taskTitle: String,
         taskDescription: String,
         locationName: String,
-        freeSlotDuration: Long
+        freeSlotDuration: Long,
+        taskId: Long = -1L
     ) {
         if (!hasNotificationPermission()) {
             return
@@ -207,7 +253,7 @@ class NotificationService @Inject constructor(
             PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notification = NotificationCompat.Builder(context, GEOFENCE_CHANNEL_ID)
+        val notificationBuilder = NotificationCompat.Builder(context, GEOFENCE_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle("✨ Perfect timing! You're free now")
             .setContentText("📍 $taskTitle at $locationName")
@@ -225,9 +271,47 @@ class NotificationService @Inject constructor(
             .setContentIntent(pendingIntent)
             .setVibrate(longArrayOf(0, 250, 250, 250))
             .setColor(0xFF6200EE.toInt()) // Primary color
-            .build()
 
-        notificationManager.notify(GEOFENCE_NOTIFICATION_ID, notification)
+        // Add action buttons for AI feedback if taskId is valid
+        if (taskId != -1L) {
+            val completeIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+                action = NotificationActionReceiver.ACTION_COMPLETE
+                putExtra(NotificationActionReceiver.EXTRA_TASK_ID, taskId)
+                putExtra(NotificationActionReceiver.EXTRA_NOTIFICATION_ID, GEOFENCE_NOTIFICATION_ID)
+            }
+            val completePendingIntent = PendingIntent.getBroadcast(
+                context,
+                taskId.toInt(),
+                completeIntent,
+                PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val dismissIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+                action = NotificationActionReceiver.ACTION_DISMISS
+                putExtra(NotificationActionReceiver.EXTRA_TASK_ID, taskId)
+                putExtra(NotificationActionReceiver.EXTRA_NOTIFICATION_ID, GEOFENCE_NOTIFICATION_ID)
+            }
+            val dismissPendingIntent = PendingIntent.getBroadcast(
+                context,
+                taskId.toInt() + 10000,
+                dismissIntent,
+                PendingIntent.FLAG_IMMUTABLE
+            )
+
+            notificationBuilder
+                .addAction(
+                    R.drawable.ic_launcher_foreground,
+                    "✅ Complete",
+                    completePendingIntent
+                )
+                .addAction(
+                    R.drawable.ic_launcher_foreground,
+                    "❌ Dismiss",
+                    dismissPendingIntent
+                )
+        }
+
+        notificationManager.notify(GEOFENCE_NOTIFICATION_ID, notificationBuilder.build())
     }
 
     /**
