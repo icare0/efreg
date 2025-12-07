@@ -32,5 +32,11 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <!-- Geofence Broadcast Receiver -->
+        <receiver
+            android:name=".data.location.GeofenceBroadcastReceiver"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 </manifest>
