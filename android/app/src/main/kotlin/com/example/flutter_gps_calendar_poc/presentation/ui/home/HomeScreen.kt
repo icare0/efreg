@@ -1,5 +1,6 @@
 package com.example.flutter_gps_calendar_poc.presentation.ui.home
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -35,7 +36,7 @@ import com.example.flutter_gps_calendar_poc.presentation.ui.components.TaskItemC
  *
  * @param viewModel The HomeViewModel that provides the UI state.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
