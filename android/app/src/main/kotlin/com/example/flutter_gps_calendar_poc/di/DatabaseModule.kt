@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.flutter_gps_calendar_poc.data.local.dao.TaskDao
 import com.example.flutter_gps_calendar_poc.data.local.dao.UserPreferenceDao
+import com.example.flutter_gps_calendar_poc.data.local.dao.UserStatsDao
 import com.example.flutter_gps_calendar_poc.data.local.database.AppDatabase
 import com.example.flutter_gps_calendar_poc.data.repository.TaskRepositoryImpl
 import com.example.flutter_gps_calendar_poc.domain.repository.TaskRepository
@@ -72,6 +73,20 @@ object DatabaseModule {
     @Singleton
     fun provideUserPreferenceDao(database: AppDatabase): UserPreferenceDao {
         return database.userPreferenceDao()
+    }
+
+    /**
+     * Provides the UserStatsDao instance from the database.
+     *
+     * Used by the gamification system to track user progress.
+     *
+     * @param database The AppDatabase instance.
+     * @return UserStatsDao for gamification operations.
+     */
+    @Provides
+    @Singleton
+    fun provideUserStatsDao(database: AppDatabase): UserStatsDao {
+        return database.userStatsDao()
     }
 
     /**
