@@ -5,6 +5,8 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.example.flutter_gps_calendar_poc.data.ai.AdaptiveScoringEngine
+import com.example.flutter_gps_calendar_poc.data.ai.LocalNLPTokenizer
 import com.example.flutter_gps_calendar_poc.data.notification.NotificationService
 import com.example.flutter_gps_calendar_poc.domain.model.FreeSlot
 import com.example.flutter_gps_calendar_poc.domain.repository.CalendarRepository
@@ -16,14 +18,16 @@ import kotlinx.coroutines.flow.first
 /**
  * Worker that checks calendar availability when a geofence is triggered.
  *
- * This is the core logic for contextual notifications:
+ * Enhanced with local AI to intelligently decide when to notify:
  * 1. User enters a task location (geofence triggered)
  * 2. Worker checks if user is currently free (no calendar events)
- * 3. If free, sends a smart notification with free slot duration
- * 4. If busy, sends a simple reminder or skips notification
+ * 3. **AI analyzes task text with NLP** (keywords, effort, urgency)
+ * 4. **Adaptive scoring engine calculates relevance score (0-100)**
+ * 5. Only notifies if score >= 60 (learned from user feedback)
+ * 6. Records user action to improve future predictions
  *
  * This replaces the manual GPS monitoring from the Flutter POC with
- * intelligent, battery-efficient geofencing.
+ * intelligent, battery-efficient, ML-powered geofencing.
  */
 @HiltWorker
 class GeofenceCheckWorker @AssistedInject constructor(
@@ -31,7 +35,9 @@ class GeofenceCheckWorker @AssistedInject constructor(
     @Assisted workerParams: WorkerParameters,
     private val taskRepository: TaskRepository,
     private val calendarRepository: CalendarRepository,
-    private val notificationService: NotificationService
+    private val notificationService: NotificationService,
+    private val nlpTokenizer: LocalNLPTokenizer,
+    private val scoringEngine: AdaptiveScoringEngine
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
@@ -40,6 +46,9 @@ class GeofenceCheckWorker @AssistedInject constructor(
 
         // Minimum free slot duration to trigger contextual notification (in minutes)
         private const val MIN_FREE_SLOT_MINUTES = 15L
+
+        // AI threshold: Only notify if score >= this value
+        private const val NOTIFICATION_SCORE_THRESHOLD = 60f
     }
 
     override suspend fun doWork(): Result {
@@ -50,7 +59,7 @@ class GeofenceCheckWorker @AssistedInject constructor(
             return Result.failure()
         }
 
-        Log.d(TAG, "Processing geofence check for task $taskId")
+        Log.d(TAG, "🤖 AI-powered geofence check for task $taskId")
 
         return try {
             // 1. Get the task
@@ -66,32 +75,62 @@ class GeofenceCheckWorker @AssistedInject constructor(
                 return Result.success()
             }
 
-            Log.d(TAG, "Found task: ${task.title} at ${task.locationName}")
+            Log.d(TAG, "📋 Found task: ${task.title} at ${task.locationName}")
 
-            // 2. Check calendar availability
-            val isUserFree = checkIfUserIsFree()
+            // 2. Run local NLP analysis
+            val analysis = nlpTokenizer.analyzeTask(task)
 
-            if (isUserFree.first) {
-                // User is FREE - send contextual notification with free slot info
-                val freeSlotDuration = isUserFree.second?.durationMinutes ?: 0L
+            Log.d(TAG, """
+                🧠 NLP Analysis:
+                - Type: ${analysis.suggestedType}
+                - Effort: ${analysis.effortLevel}
+                - Urgency: ${analysis.urgency}
+                - Time preference: ${analysis.timeOfDayPreference}
+                - Estimated duration: ${analysis.estimatedDurationMinutes}min
+                - Keywords: ${analysis.detectedKeywords.joinToString()}
+                - Confidence: ${(analysis.confidence * 100).toInt()}%
+            """.trimIndent())
 
-                Log.d(TAG, "User is FREE (${freeSlotDuration}min available). Sending contextual notification.")
+            // 3. Check calendar availability
+            val freeSlotData = checkIfUserIsFree()
+            val isFree = freeSlotData.first
+            val freeSlot = freeSlotData.second
 
-                notificationService.showContextualTaskNotification(
-                    taskTitle = task.title,
-                    taskDescription = task.description,
-                    locationName = task.locationName,
-                    freeSlotDuration = freeSlotDuration
-                )
+            // 4. Calculate AI relevance score
+            val score = scoringEngine.calculateNotificationScore(
+                task = task,
+                freeSlot = freeSlot,
+                analysis = analysis
+            )
+
+            Log.d(TAG, "🎯 AI Score: $score/100 (threshold: $NOTIFICATION_SCORE_THRESHOLD)")
+
+            // 5. Decision: notify or skip
+            if (score >= NOTIFICATION_SCORE_THRESHOLD) {
+                // High score - send notification
+                if (isFree) {
+                    val freeSlotDuration = freeSlot?.durationMinutes ?: 0L
+
+                    Log.d(TAG, "✅ NOTIFY: User is FREE (${freeSlotDuration}min) + High score")
+
+                    notificationService.showContextualTaskNotification(
+                        taskTitle = task.title,
+                        taskDescription = task.description,
+                        locationName = task.locationName,
+                        freeSlotDuration = freeSlotDuration
+                    )
+                } else {
+                    Log.d(TAG, "✅ NOTIFY: User is BUSY but score is high, sending simple reminder")
+
+                    notificationService.showGeofenceNotification(
+                        taskTitle = task.title,
+                        taskDescription = task.description,
+                        locationName = task.locationName
+                    )
+                }
             } else {
-                // User is BUSY - send simple reminder (or skip if preferred)
-                Log.d(TAG, "User is BUSY (calendar event in progress). Sending simple reminder.")
-
-                notificationService.showGeofenceNotification(
-                    taskTitle = task.title,
-                    taskDescription = task.description,
-                    locationName = task.locationName
-                )
+                // Low score - skip notification
+                Log.d(TAG, "❌ SKIP: Score too low ($score < $NOTIFICATION_SCORE_THRESHOLD)")
             }
 
             Result.success()

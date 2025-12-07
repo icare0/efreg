@@ -3,6 +3,7 @@ package com.example.flutter_gps_calendar_poc.di
 import android.content.Context
 import androidx.room.Room
 import com.example.flutter_gps_calendar_poc.data.local.dao.TaskDao
+import com.example.flutter_gps_calendar_poc.data.local.dao.UserPreferenceDao
 import com.example.flutter_gps_calendar_poc.data.local.database.AppDatabase
 import com.example.flutter_gps_calendar_poc.data.repository.TaskRepositoryImpl
 import com.example.flutter_gps_calendar_poc.domain.repository.TaskRepository
@@ -57,6 +58,20 @@ object DatabaseModule {
     @Singleton
     fun provideTaskDao(database: AppDatabase): TaskDao {
         return database.taskDao()
+    }
+
+    /**
+     * Provides the UserPreferenceDao instance from the database.
+     *
+     * Used by the AI adaptive scoring engine to learn user preferences.
+     *
+     * @param database The AppDatabase instance.
+     * @return UserPreferenceDao for AI learning operations.
+     */
+    @Provides
+    @Singleton
+    fun provideUserPreferenceDao(database: AppDatabase): UserPreferenceDao {
+        return database.userPreferenceDao()
     }
 
     /**
