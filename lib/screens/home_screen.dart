@@ -6,6 +6,7 @@ import '../services/location_service.dart';
 import '../services/google_calendar_service.dart';
 import '../services/microsoft_calendar_service.dart';
 import '../services/notification_service.dart';
+import 'calendar_screen.dart';
 
 /// Écran principal du POC
 /// Regroupe : login Google/Microsoft, position GPS en temps réel, événements du jour
@@ -168,6 +169,22 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('POC GPS & Calendar'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CalendarScreen(
+                googleCalendarService: _googleCalendarService,
+                microsoftCalendarService: _microsoftCalendarService,
+              ),
+            ),
+          );
+        },
+        icon: const Icon(Icons.calendar_month),
+        label: const Text('Calendrier'),
+        tooltip: 'Voir le calendrier complet',
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
