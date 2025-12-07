@@ -262,12 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Row(
               children: [
-                Image.asset(
-                  'assets/google_logo.png',
-                  width: 24,
-                  height: 24,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.calendar_today, color: Colors.red),
-                ),
+                const Icon(Icons.calendar_today, color: Colors.red, size: 28),
                 const SizedBox(width: 8),
                 Text(
                   'Google Calendar',

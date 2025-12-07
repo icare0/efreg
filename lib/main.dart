@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'screens/home_screen.dart';
 
-void main() {
+void main() async {
+  // Initialiser les données de locale française pour le formatage des dates
+  await initializeDateFormatting('fr_FR', null);
   runApp(const MyApp());
 }
 
