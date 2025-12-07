@@ -7,14 +7,13 @@ import com.example.flutter_gps_calendar_poc.domain.model.UserStats
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.Calendar
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Manages gamification features: points, badges, streaks, levels.
+ *
+ * Provided by DatabaseModule.provideGamificationManager()
  */
-@Singleton
-class GamificationManager @Inject constructor(
+class GamificationManager(
     private val userStatsDao: UserStatsDao
 ) {
 
