@@ -280,7 +280,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 Row(
                   children: [
                     Icon(
-                      event.source == 'Google' ? Icons.g_mobiledata : Icons.microsoft,
+                      event.source == 'Google' ? Icons.g_mobiledata : Icons.business,
                       size: 16,
                       color: Colors.grey[600],
                     ),
